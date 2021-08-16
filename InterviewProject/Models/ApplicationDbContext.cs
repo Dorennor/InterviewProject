@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InterviewProject.Models
 {
-    public sealed class AccountsDbContext : IdentityDbContext
+    public sealed class ApplicationDbContext : IdentityDbContext<User>
     {
         public DbSet<Topic> Topics { get; set; }
         public DbSet<Post> Posts { get; set; }
-        public AccountsDbContext(DbContextOptions<AccountsDbContext> options) : base(options)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
             Database.EnsureCreated();
         }
