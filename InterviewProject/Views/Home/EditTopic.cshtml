@@ -1,0 +1,23 @@
+﻿@model EditTopicViewModel
+<h2>Edit topic</h2>
+<form method="post" asp-controller="Home" asp-action="EditTopic">
+    <div asp-validation-summary="ModelOnly"></div>
+    <div>
+        <label asp-for="Title">Title</label><br />
+        <textarea cols="50" rows="1" placeholder="Left empty if you don't want to edit this field." asp-for="Title"></textarea>
+        <span asp-validation-for="Title"></span><br />
+    </div>
+    <div>
+        <label asp-for="Description">Description</label><br />
+        <textarea cols="50" placeholder="Left empty if you don't want to edit this field." asp-for="Description"></textarea>
+        <span asp-validation-for="Description"></span><br />
+    </div>
+    <div hidden>
+        <label asp-for="TopicId">TopicId</label><br />
+        <input asp-for="TopicId" value="@ViewData["Id"]"/>
+        <span asp-validation-for="TopicId"></span><br />
+    </div>
+    <div>
+        <input type="submit" value="Edit" />
+    </div>
+</form>

@@ -1,0 +1,77 @@
+﻿@model ThreadViewModel;
+
+<div class="container">
+    <h2>@Model.Topic.Title</h2>
+</div>
+
+<div class="container">
+    @if (Model != null && @Model.ConfirmedEmail)
+    {
+        <div class="container">
+            <form method="post" asp-controller="Topics" asp-action="Index">
+                <div>
+                    <label asp-for="@Model.ViewModel.Text">New post</label><br />
+                    <textarea class="w-auto col-auto" rows="5" cols="150" asp-for="@Model.ViewModel.Text"></textarea>
+                    <span asp-validation-for="@Model.ViewModel.Text"></span><br />
+                </div>
+                <div hidden>
+                    <label asp-for="@Model.ViewModel.TopicId">TopicId</label><br />
+                    <input asp-for="@Model.ViewModel.TopicId" value="@Model.Topic.Id"/>
+                    <span asp-validation-for="@Model.ViewModel.TopicId"></span><br />
+                </div>
+                <div hidden>
+                    <label asp-for="@Model.ViewModel.UserName">UserName</label><br />
+                    <input asp-for="@Model.ViewModel.UserName" value="@User.Identity.Name"/>
+                    <span asp-validation-for="@Model.ViewModel.UserName"></span><br />
+                </div>
+                <div>
+                    <input type="submit" value="Add" /><br />
+                </div>
+            </form>
+        </div>
+        <table class="table text-center">
+            @foreach (var i in Model.Posts)
+            {
+                <tr>
+                    <td>
+                        <p>@i.UserName</p>
+                    </td>
+                    <td>
+                        <p>@i.Text</p>
+                    </td>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        @if (User.Identity.Name != null && (User.Identity.Name.Equals(i.UserName) || User.IsInRole("Administrator")))
+                        {
+                            <td>
+                                <a class="btn btn-sm btn-primary" asp-action="EditPost" asp-route-id="@i.Id">Edit post</a>
+                            </td>
+                            <td>
+                                <a class="btn btn-sm btn-danger" asp-action="DeletePost" asp-route-id="@i.Id">Delete post</a>
+                            </td>
+                        }
+                    }
+
+                </tr>
+                <tr  class="table-borderless">
+                    <td colspan="4"><p>@i.PostDateTime</p></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr class="table-borderless">
+                    <td colspan="4"></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            }
+        </table>
+            
+       
+    }
+    else
+    {
+        <p>Please, verify your account! Check your email!</p>
+    }
+</div>

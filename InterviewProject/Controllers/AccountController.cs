@@ -1,13 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using InterviewProject.Models;
+﻿using InterviewProject.Models;
+using InterviewProject.Services;
 using InterviewProject.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace InterviewProject.Controllers
 {
@@ -15,18 +16,22 @@ namespace InterviewProject.Controllers
     {
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
-        private ApplicationDbContext _context;
+        private readonly EmailService _emailService;
 
-        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager,
-            ApplicationDbContext context)
+        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager, EmailService emailService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _context = context;
+            _emailService = emailService;
         }
 
         [HttpGet]
         public IActionResult Register()
+        {
+            return View();
+        }
+
+        public IActionResult Error()
         {
             return View();
         }
@@ -41,17 +46,21 @@ namespace InterviewProject.Controllers
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
+                    User registeredUser = await _userManager.FindByEmailAsync(model.Email);
+                    IEnumerable<string> role = new[] { "User" };
+                    await _userManager.AddToRolesAsync(registeredUser, role);
+
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     var callbackUrl = Url.Action(
                         "ConfirmEmail",
                         "Account",
                         new { userId = user.Id, code = code },
                         protocol: HttpContext.Request.Scheme);
-                    EmailService emailService = new EmailService();
-                    await emailService.SendEmailAsync(model.Email, "Confirm your account",
+
+                    await _emailService.SendEmailAsync(model.Email, "Confirm your account",
                         $"Confirm registration by following the link: <a href='{callbackUrl}'>link</a>");
 
-                    return Content("To complete registration, check your email and follow the link provided in the letter.");
+                    return RedirectToAction("ConfirmEmailPage");
                 }
                 else
                 {
@@ -94,9 +103,9 @@ namespace InterviewProject.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
+            if (!IsValidEmail(model.Email)) return RedirectToAction("Error");
             if (ModelState.IsValid)
             {
-                //var user = _context.Users.FirstOrDefault(l => l.Email.Equals(model.Email));
                 var result = await _signInManager.PasswordEmailSignInAsync(model.Email, model.Password, model.RememberMe, false);
                 if (result.Succeeded)
                 {
@@ -122,6 +131,51 @@ namespace InterviewProject.Controllers
         {
             await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
+        }
+
+        [HttpGet]
+        public IActionResult ConfirmEmailPage()
+        {
+            return View();
+        }
+
+        public static bool IsValidEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+
+            try
+            {
+                email = Regex.Replace(email, @"(@)(.+)$", DomainMapper,
+                    RegexOptions.None, TimeSpan.FromMilliseconds(200));
+                string DomainMapper(Match match)
+                {
+                    var idn = new IdnMapping();
+
+                    string domainName = idn.GetAscii(match.Groups[2].Value);
+
+                    return match.Groups[1].Value + domainName;
+                }
+            }
+            catch (RegexMatchTimeoutException e)
+            {
+                return false;
+            }
+            catch (ArgumentException e)
+            {
+                return false;
+            }
+
+            try
+            {
+                return Regex.IsMatch(email,
+                    @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+                    RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250));
+            }
+            catch (RegexMatchTimeoutException)
+            {
+                return false;
+            }
         }
     }
 }

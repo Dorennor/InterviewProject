@@ -1,5 +1,45 @@
 ﻿@model List<Topic>;
 
 <div class="container">
-    <p>Topics list</p>
+    @if (Model != null)
+    {
+        <table class="table text-center">
+            <tr>
+                <td><p>Title</p></td>
+                <td><p>Description</p></td>
+                <td><p>Creator</p></td>
+                <td><p>Date and time of last post</p></td>
+                <td><p>Number of posts</p></td>
+                <td><p></p></td>
+                <td><p></p></td>
+            </tr>
+            @foreach (var i in Model)
+            {
+                <tr>
+                    <td><a class="nav-link" asp-area="" asp-controller="Topics" asp-action="Index" asp-route-id="@i.Id">@i.Title</a></td>
+                    <td><p>@i.Description</p></td>
+                    <td><p>@i.UserName</p></td>
+                    <td><p>@i.LastPostDateTime</p></td>
+                    <td><p>@i.NumberOfPosts</p></td>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        @if (User.Identity.Name != null && (User.Identity.Name.Equals(i.UserName) || User.IsInRole("Administrator")))
+                        {
+                            <td>
+                                <a class="btn btn-sm btn-primary" asp-action="EditTopic" asp-route-id="@i.Id">Edit topic</a>
+                            </td>
+                            <td>
+                                <a class="btn btn-sm btn-danger" asp-action="DeleteTopic" asp-route-id="@i.Id">Delete topic</a>
+                            </td>
+                        }
+                    }
+                </tr>
+            }
+        </table>
+        
+    }
+    else
+    {
+        <p>No topics here.</p>
+    }
 </div>

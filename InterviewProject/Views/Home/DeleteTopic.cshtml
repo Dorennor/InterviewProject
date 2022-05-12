@@ -1,0 +1,16 @@
+﻿<div class="container">
+    <table class="table table-borderless w-auto text-center">
+        <tr>
+            <td colspan="2"><p>Are you sure?</p></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>
+                <a class="btn btn-sm btn-danger" asp-action="ConfirmDeleteTopic" asp-route-id="@ViewData["Id"]">Delete</a>
+            </td>
+            <td>
+                <a class="btn btn-sm btn-primary" asp-action="Index">Cancel</a>
+            </td>
+        </tr>
+    </table>
+</div>
